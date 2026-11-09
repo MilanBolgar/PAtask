@@ -1,29 +1,73 @@
 package com.codecool.brewery;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 
-/**
- * Represents a beer produced by the brewery.
- * This is a basic implementation - you need to extend this to support different beer types.
- */
-class Beer {
-    String name;
-    double alcoholContent;
-    LocalDate productionDate;
+public abstract class Beer {
+    private final String name;
+    private final double alcoholContent;
+    private final LocalDate productionDate;
 
-    Beer(String name, double alcoholContent, LocalDate productionDate) {}
+    public Beer(String name, double alcoholContent, LocalDate productionDate) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        if (alcoholContent < 0.0 || alcoholContent > 100.0) {
+            throw new IllegalArgumentException("Alcohol content must be between 0.0 and 100.0");
+        }
+        if (productionDate == null) {
+            throw new IllegalArgumentException("Production date cannot be null");
+        }
 
-    // TODO: Add method to calculate days until beer is ready for sale
-    // TODO: Consider how to handle different fermentation times for different beer types
-    void getDaysUntilReady() {
+        this.name = name;
+        this.alcoholContent = alcoholContent;
+        this.productionDate = productionDate;
     }
 
-    // TODO: Add method to get storage temperature requirement
-    // TODO: Consider canBeStoredAt method may accept parameters for temperature checks
-    void canBeStoredAt() {
+    public String getName() {
+        return name;
     }
 
-    // TODO: Add method to get fermentation days
-    void getFermentationDays() {
+    public double getAlcoholContent() {
+        return alcoholContent;
+    }
+
+    public LocalDate getProductionDate() {
+        return productionDate;
+    }
+
+    public abstract int getFermentationDays();
+
+    public abstract boolean canBeStoredAt(double temperature);
+
+    public LocalDate getReadyDate() {
+        return productionDate.plusDays(getFermentationDays());
+    }
+
+    public long getDaysUntilReady() {
+        LocalDate readyDate = getReadyDate();
+        LocalDate today = LocalDate.now();
+        long daysRemaining = ChronoUnit.DAYS.between(today, readyDate);
+        return Math.max(0, daysRemaining);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if(!(o instanceof Beer beer)) return false;
+        return Double.compare(beer.alcoholContent, alcoholContent) == 0 &&
+                Objects.equals(name, beer.name) &&
+                Objects.equals(productionDate, beer.productionDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, alcoholContent, productionDate);
+    }
+
+    @Override
+    public String toString() {
+        return "%s (alcohol content: %.1f%%, production date: %s, ready date: %s)".formatted(name, alcoholContent, productionDate, getReadyDate());
     }
 }
